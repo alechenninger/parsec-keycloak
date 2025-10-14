@@ -2,6 +2,7 @@ package com.alechenninger.parsec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.alechenninger.parsec.testing.TestConfig;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ProtocolMapperRepresentation;
@@ -23,8 +24,7 @@ public class AgeInfoMapperTest {
 
     @SuppressWarnings("resource")
     @Container
-    private static final KeycloakContainer keycloak = new KeycloakContainer()
-            .withProviderClassesFrom("target/classes");
+    private static final KeycloakContainer keycloak = TestConfig.createKeycloakContainer();
 
     /**
      * Test that the AgeInfoMapper extension is loaded and available in the Keycloak container.

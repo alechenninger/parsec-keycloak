@@ -1,2 +1,0 @@
-META-INF/services/org.keycloak.protocol.ProtocolMapper
-com/alechenninger/parsec/AgeInfoMapper.class

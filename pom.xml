@@ -18,6 +18,7 @@
 
     <!-- Keycloak -->
     <keycloak.version>26.3.5</keycloak.version>
+    <keycloak-admin-client.version>26.0.6</keycloak-admin-client.version>
 
     <!-- Testing Dependencies -->
     <junit-bom.version>5.11.0</junit-bom.version>
@@ -81,6 +82,13 @@
       <scope>provided</scope>
     </dependency>
 
+     <dependency>
+       <groupId>org.keycloak</groupId>
+       <artifactId>keycloak-admin-client</artifactId>
+       <version>${keycloak-admin-client.version}</version>
+       <scope>test</scope>
+   </dependency>
+
     <!-- Tooling Dependencies -->
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -115,6 +123,12 @@
       <artifactId>testcontainers-keycloak</artifactId>
       <version>${testcontainers-keycloak.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.keycloak</groupId>
+          <artifactId>keycloak-admin-client</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -142,6 +156,24 @@
       <version>${jackson.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-json-provider</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -156,6 +188,33 @@
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
           <version>${maven-resources-plugin.version}</version>
+          <executions>
+            <execution>
+              <id>filter-test-resources</id>
+              <phase>process-test-resources</phase>
+              <goals>
+                <goal>testResources</goal>
+              </goals>
+              <configuration>
+                <resources>
+                  <resource>
+                    <directory>src/test/resources</directory>
+                    <filtering>true</filtering>
+                    <includes>
+                      <include>test.properties</include>
+                    </includes>
+                  </resource>
+                  <resource>
+                    <directory>src/test/resources</directory>
+                    <filtering>false</filtering>
+                    <excludes>
+                      <exclude>test.properties</exclude>
+                    </excludes>
+                  </resource>
+                </resources>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
