@@ -1,0 +1,9 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.test.config": {
+        "env": {
+            "DOCKER_HOST": "unix:///var/folders/0g/8qk101ks3xl4v_w5kqv47r_h0000gn/T/podman/podman-machine-default-api.sock",
+            "TESTCONTAINERS_RYUK_DISABLED": "true"
+        }
+    }
+}
