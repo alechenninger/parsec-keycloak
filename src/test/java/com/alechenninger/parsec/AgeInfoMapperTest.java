@@ -20,7 +20,7 @@ import java.util.Map;
  * Integration tests for custom Keycloak protocol mappers.
  */
 @Testcontainers
-public class AppTest {
+public class AgeInfoMapperTest {
 
     @SuppressWarnings("resource")
     @Container
