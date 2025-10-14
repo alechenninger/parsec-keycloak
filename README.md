@@ -1,0 +1,1 @@
+Experiment with providing a [parsec](https://github.com/alechenninger/parsec)-like service but using Keycloak.
