@@ -10,9 +10,9 @@ import java.time.Duration;
  * using the management interface health endpoints, avoiding log coupling.
  * See: https://www.keycloak.org/observability/health
  */
-public class ReadyKeycloakContainer extends KeycloakContainer {
+public class ParsecKeycloakContainer extends KeycloakContainer {
 
-    public ReadyKeycloakContainer(String imageName) {
+    public ParsecKeycloakContainer(String imageName) {
         super(imageName);
     }
 

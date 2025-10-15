@@ -91,6 +91,22 @@ public class ExtAuthzServerProviderImpl implements ExtAuthzServerProvider, ExtAu
         return isRunning() ? configuredPort : -1;
     }
     
+    /**
+     * Static method to check if the server is running (for health checks).
+     * @return true if the server is running
+     */
+    public static boolean isServerRunning() {
+        return serverStarted && grpcServer != null && !grpcServer.isShutdown();
+    }
+    
+    /**
+     * Static method to get the server port (for health checks).
+     * @return the server port, or -1 if not running
+     */
+    public static int getServerPort() {
+        return isServerRunning() ? configuredPort : -1;
+    }
+    
     @Override
     public void close() {
         // Session-level close - don't stop the server

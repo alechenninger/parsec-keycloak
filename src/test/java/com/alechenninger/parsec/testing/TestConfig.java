@@ -34,17 +34,20 @@ public class TestConfig {
     
     @SuppressWarnings("resource")
     public static KeycloakContainer createKeycloakContainer() {
-        // Use the JAR with dependencies instead of just classes
-        String jarPath = "target/parsec-keycloak-1.0-SNAPSHOT.jar";
-        java.io.File jarFile = new java.io.File(jarPath);
-        if (jarFile.exists()) {
-            return new ReadyKeycloakContainer(getKeycloakImage())
-                    .withProviderLibsFrom(java.util.List.of(jarFile));
-        } else {
-            // Fallback to classes directory for development
-            return new ReadyKeycloakContainer(getKeycloakImage())
-                    .withProviderClassesFrom("target/classes");
+        // Use classes directory + single dependencies JAR
+        // This approach keeps our code always fresh while packaging all dependencies into one JAR
+        // Using many dependency jars was excessively slow
+        java.io.File dependenciesJar = new java.io.File("target/parsec-keycloak-1.0-SNAPSHOT-dependencies.jar");
+        
+        if (dependenciesJar.exists()) {
+            return new ParsecKeycloakContainer(getKeycloakImage())
+                    .withProviderClassesFrom("target/classes")
+                    .withProviderLibsFrom(java.util.List.of(dependenciesJar));
         }
+        
+        // Fallback to just classes directory if dependencies JAR not yet built
+        return new ParsecKeycloakContainer(getKeycloakImage())
+                .withProviderClassesFrom("target/classes");
     }
 
     private static String getKeycloakImage() {

@@ -45,10 +45,7 @@ class ExtAuthzIntegrationTest {
     private static AuthorizationGrpc.AuthorizationBlockingStub authzStub;
     
     @BeforeAll
-    static void setUp() throws InterruptedException {
-        // Wait for Keycloak to be ready
-        keycloak.start();
-        
+    static void setUp() {        
         // Print container logs for debugging
         System.out.println("=== Keycloak Container Logs ===");
         System.out.println(keycloak.getLogs());
@@ -60,8 +57,6 @@ class ExtAuthzIntegrationTest {
         
         System.out.println("Connecting to ext_authz gRPC service at " + grpcHost + ":" + grpcPort);
         
-        // Give the gRPC server a moment to start after Keycloak is ready
-        Thread.sleep(2000);
         
         // Create gRPC channel
         grpcChannel = ManagedChannelBuilder
