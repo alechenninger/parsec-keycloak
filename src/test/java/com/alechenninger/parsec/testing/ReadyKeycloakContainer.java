@@ -25,6 +25,9 @@ public class ReadyKeycloakContainer extends KeycloakContainer {
 
         // Expose management port 9000 so the wait strategy can hit it
         this.addExposedPort(9000);
+        
+        // Expose gRPC port 9191 for ext_authz service
+        this.addExposedPort(9191);
 
         // Wait for the 'started' health endpoint as readiness signal
         this.waitingFor(

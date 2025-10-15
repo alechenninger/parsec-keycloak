@@ -34,8 +34,17 @@ public class TestConfig {
     
     @SuppressWarnings("resource")
     public static KeycloakContainer createKeycloakContainer() {
-        return new ReadyKeycloakContainer(getKeycloakImage())
-                .withProviderClassesFrom("target/classes");
+        // Use the JAR with dependencies instead of just classes
+        String jarPath = "target/parsec-keycloak-1.0-SNAPSHOT.jar";
+        java.io.File jarFile = new java.io.File(jarPath);
+        if (jarFile.exists()) {
+            return new ReadyKeycloakContainer(getKeycloakImage())
+                    .withProviderLibsFrom(java.util.List.of(jarFile));
+        } else {
+            // Fallback to classes directory for development
+            return new ReadyKeycloakContainer(getKeycloakImage())
+                    .withProviderClassesFrom("target/classes");
+        }
     }
 
     private static String getKeycloakImage() {
