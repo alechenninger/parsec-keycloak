@@ -111,40 +111,15 @@
       <optional>true</optional>
     </dependency>
 
-    <!-- gRPC and Envoy Dependencies -->
-    <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-netty-shaded</artifactId>
-      <version>${grpc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-protobuf</artifactId>
-      <version>${grpc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-stub</artifactId>
-      <version>${grpc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>${protobuf.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.envoyproxy.controlplane</groupId>
-      <artifactId>api</artifactId>
-      <version>${envoy-control-plane.version}</version>
-    </dependency>
+    <!-- No special dependencies needed for HTTP ext_authz -->
+    <!-- We'll use Keycloak's existing JAX-RS infrastructure -->
 
-    <!-- Guava - needed by existing code (AgeInfoMapper) and gRPC at runtime -->
-    <!-- Using compile scope so it gets included in the shaded JAR -->
+    <!-- Guava - needed by AgeInfoMapper example -->
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>33.0.0-jre</version>
-      <!-- TODO: probably should actually be provided -->
+      <scope>provided</scope>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -183,6 +158,20 @@
       <scope>test</scope>
     </dependency>
     
+    <!-- Mockito for mocking -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>5.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    
     <!-- Jakarta and Jackson dependencies for testing with Keycloak Admin Client -->
     <!-- Note: keycloak-spi-bom manages SPI dependencies but not these client dependencies -->
     <!-- These versions should be compatible with Keycloak 26.x / Quarkus 3.x -->
@@ -190,7 +179,7 @@
       <groupId>jakarta.ws.rs</groupId>
       <artifactId>jakarta.ws.rs-api</artifactId>
       <version>${jakarta.ws.rs-api.version}</version>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
