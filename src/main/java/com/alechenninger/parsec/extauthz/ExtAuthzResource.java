@@ -18,6 +18,8 @@ import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.services.cors.Cors;
+import org.keycloak.protocol.oidc.utils.AuthorizeClientUtil;
+import org.keycloak.OAuthErrorException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,17 +89,21 @@ public class ExtAuthzResource {
         
         try {
             System.out.println("=== ENTERING TRY BLOCK ===");
-            // Step 1: Authenticate the calling client (proxy/gateway)
-            String clientAuthHeader = httpHeaders.getHeaderString(CLIENT_AUTH_HEADER);
-            if (clientAuthHeader == null || !clientAuthHeader.toLowerCase().startsWith("bearer ")) {
-                logger.warn("Missing or invalid " + CLIENT_AUTH_HEADER + " header");
-                return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of("status", "denied", "reason", "Client authentication required"))
-                    .build();
+            // Step 1: Authenticate the calling client (proxy/gateway) using Keycloak's native client auth (Basic or JWT)
+            RealmModel realm = session.getContext().getRealm();
+            EventBuilder authEvent = new EventBuilder(realm, session);
+            // Build CORS ONCE and reuse it throughout this request
+            Cors cors = Cors.builder().auth().allowedMethods("POST").auth().exposedHeaders(Cors.ACCESS_CONTROL_ALLOW_METHODS);
+            AuthorizeClientUtil.ClientAuthResult clientAuth = AuthorizeClientUtil.authorizeClient(session, authEvent, cors);
+            ClientModel authenticatedClient = clientAuth.getClient();
+            Map<String, String> clientAuthAttributes = clientAuth.getClientAuthAttributes();
+            cors.allowedOrigins(session, authenticatedClient);
+
+            if (authenticatedClient.isBearerOnly()) {
+                Response.ResponseBuilder rb = Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", OAuthErrorException.INVALID_CLIENT, "error_description", "Bearer-only not allowed"));
+                return rb.build();
             }
-            
-            String clientTokenString = clientAuthHeader.substring("Bearer ".length());
-            ClientModel authenticatedClient = verifyClientToken(clientTokenString);
             logger.infof("Authenticated client: %s", authenticatedClient.getClientId());
             
             // Step 2: Extract subject token from the request body
@@ -117,7 +123,9 @@ public class ExtAuthzResource {
                 exchangeResult = performTokenExchange(
                     authenticatedClient,
                     subjectToken,
-                    httpHeaders
+                    httpHeaders,
+                    clientAuthAttributes,
+                    cors
                 );
                 logger.infof("Token exchange successful");
             } catch (Exception e) {
@@ -143,12 +151,6 @@ public class ExtAuthzResource {
             
             return Response.ok(response).build();
             
-        } catch (VerificationException e) {
-            logger.errorf(e, "Token verification failed");
-            return Response.status(Response.Status.FORBIDDEN)
-                .entity(Map.of("status", "denied", "reason", "Token verification failed: " + e.getMessage()))
-                .build();
-                
         } catch (Exception e) {
             logger.errorf(e, "Token exchange failed");
             return Response.status(Response.Status.FORBIDDEN)
@@ -237,7 +239,9 @@ public class ExtAuthzResource {
     private AccessTokenResponse performTokenExchange(
             ClientModel client,
             String subjectToken,
-            HttpHeaders httpHeaders) throws Exception {
+            HttpHeaders httpHeaders,
+            Map<String, String> clientAuthAttributes,
+            Cors cors) throws Exception {
         
         RealmModel realm = session.getContext().getRealm();
         
@@ -266,22 +270,18 @@ public class ExtAuthzResource {
         // Use the REAL HTTP context from the current request
         // We're already in a JAX-RS resource, so we have actual HttpHeaders and ClientConnection
         org.keycloak.common.ClientConnection clientConnection = session.getContext().getConnection();
-        var cors = Cors.builder().auth().allowedMethods("POST").auth().exposedHeaders(Cors.ACCESS_CONTROL_ALLOW_METHODS);
-
-        
         // Create token exchange context with the real HTTP context
-        // Note: Pass null for CORS - we'll handle CORS ourselves if needed
         TokenExchangeContext context = new TokenExchangeContext(
             session,
             formParams,
-            cors,  // CORS handler - pass null, we'll handle response ourselves
+            cors,
             realm,
             eventBuilder,
             client,
             clientConnection,  // Use real connection from current request
             httpHeaders,       // Use real HTTP headers from current request (@Context injected)
             tokenManager,
-            Map.of()  // requestParameters (clientAuthAttributes) - not needed for our use case
+            clientAuthAttributes  // requestParameters (clientAuthAttributes)
         );
         
         // Find the first TokenExchangeProvider that supports this exchange

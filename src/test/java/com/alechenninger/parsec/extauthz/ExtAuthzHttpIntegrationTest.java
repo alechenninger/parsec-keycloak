@@ -16,6 +16,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -321,11 +323,12 @@ public class ExtAuthzHttpIntegrationTest {
         
         String bodyJson = objectMapper.writeValueAsString(envoyBody);
         
-        // Create HTTP request with proxy authentication in header and subject token in body
+        // Create HTTP request with standard client authentication (Basic)
+        String basic = Base64.getEncoder().encodeToString((PROXY_CLIENT_ID + ":" + PROXY_CLIENT_SECRET).getBytes(StandardCharsets.UTF_8));
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(extAuthzUrl))
             .header("Content-Type", "application/json")
-            .header("X-Proxy-Authorization", "Bearer " + proxyToken)  // Actor (proxy) authentication
+            .header("Authorization", "Basic " + basic)
             .POST(HttpRequest.BodyPublishers.ofString(bodyJson))      // Envoy body with proxied headers
             .build();
         
@@ -376,7 +379,7 @@ public class ExtAuthzHttpIntegrationTest {
         
         String extAuthzUrl = authUrl + "/realms/" + TEST_REALM + "/ext-authz/check";
         
-        // Request without X-Proxy-Authorization header
+        // Request without client authentication header
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(extAuthzUrl))
             .header("Content-Type", "application/json")
@@ -408,11 +411,12 @@ public class ExtAuthzHttpIntegrationTest {
         
         String extAuthzUrl = authUrl + "/realms/" + TEST_REALM + "/ext-authz/check";
         
-        // Request without Authorization header (subject token)
+        // Request without Authorization header (subject token), but with client auth
+        String basic = Base64.getEncoder().encodeToString((PROXY_CLIENT_ID + ":" + PROXY_CLIENT_SECRET).getBytes(StandardCharsets.UTF_8));
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(extAuthzUrl))
             .header("Content-Type", "application/json")
-            .header("X-Proxy-Authorization", "Bearer " + proxyToken)
+            .header("Authorization", "Basic " + basic)
             .POST(HttpRequest.BodyPublishers.ofString("{}"))
             .build();
         
